@@ -31,11 +31,13 @@ RUN apk update \
         tmux \
         bash \
         libzip-dev \
+        libpq-dev \
         ${PHPIZE_DEPS} \
     && rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-install \
-    opcache soap xsl zip pcntl bcmath sockets pdo_mysql \
+    opcache soap xsl zip pcntl bcmath sockets \
+    pgsql pdo_pgsql \
     && pecl install -o -f redis imagick &&  rm -rf /tmp/pear &&  docker-php-ext-enable redis imagick \
     && docker-php-source delete \
     && apk del ${BUILD_DEPENDS}

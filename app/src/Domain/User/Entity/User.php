@@ -14,7 +14,7 @@ use App\Domain\User\Repository\UserRepositoryInterface;
 class User
 {
     #[Column(type: 'primary')]
-    private int $id;
+    private ?int $id = null;
 
     public function __construct(
         #[Column(type: 'string')]

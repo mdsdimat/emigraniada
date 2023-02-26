@@ -1,12 +1,13 @@
-# My awesome Web application
+# TLS
 
-Hello developer! Welcome to your new awesome `Web` application built with the Spiral framework.
-
-We're excited that you've chosen Spiral for your project and we hope that our installer package has made the
-installation process a breeze.
-
-To help you get started, we've provided some instructions for configuring the individual packages that were installed.
-Depending on the packages you chose during the installation, you'll find the following next steps:
+Certificates generated via mkcert.
+To enable it for local development
+1) Install [mkcert](https://github.com/FiloSottile/mkcert)
+2) do:
+```
+$ mkcert -cert-file docker/traefik/certs/local-cert.pem -key-file docker/traefik/certs/local-key.pem "emigraniada.localhost" "*.emigraniada.localhost" swb.localhost "*.emigraniada.localhost"
+$ mkcert -install
+```
 
 ## Next Steps
 

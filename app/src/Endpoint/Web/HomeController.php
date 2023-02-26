@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Endpoint\Web;
 
+use App\Domain\Splitwise\Service\AuthService;
 use Exception;
+use Psr\Http\Message\ServerRequestInterface;
+use Spiral\Http\ResponseWrapper;
 use Spiral\Prototype\Traits\PrototypeTrait;
 use Spiral\Router\Annotation\Route;
 
@@ -21,10 +24,15 @@ final class HomeController
     use PrototypeTrait;
 
 
+    public function __construct(
+        private readonly ResponseWrapper $response,
+        private readonly AuthService $authService
+    ) {
+    }
+
     #[Route(route: '/', name: 'index')]
     public function index(): string
     {
-        \dumprr(1);
         return $this->views->render('home');
     }
 
@@ -35,5 +43,13 @@ final class HomeController
     public function exception(): never
     {
         throw new Exception('This is a test exception.');
+    }
+
+    #[Route(route: '/splitwise', name: 'splitwise')]
+    public function splitwiseInfo(ServerRequestInterface $request): void
+    {
+        $this->authService->getAllExpenses(
+            $request->getQueryParams()['group_id']
+        );
     }
 }

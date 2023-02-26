@@ -141,5 +141,6 @@ class Kernel extends \Spiral\Framework\Kernel
     protected const APP = [
         // User Domain
         Bootloader\PersistenceBootloader::class,
+        Bootloader\SplitwiseBootloader::class,
     ];
 }

@@ -18,17 +18,10 @@ http:
 server:
     command: 'php app.php'
     relay: pipes
-kv:
-    local:
-        driver: memory
-        config:
-            interval: 60
-#temporal:
-#    address: '127.0.0.1:7233'
 metrics:
     address: '127.0.0.1:2112'
 jobs:
     pool:
         num_workers: 2
         max_worker_memory: 100
-    consume: {  }
+    consume: [  ]

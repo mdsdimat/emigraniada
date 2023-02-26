@@ -6,7 +6,7 @@ use Cycle\Database\Config;
 
 return [
     'logger' => [
-        'default' => null,
+        'default' => env('DBAL_SQL_LOGGER') ?: null,
         'drivers' => [
             // 'runtime' => 'stdout'
         ],
@@ -38,9 +38,13 @@ return [
      * the driver class and its connection options.
      */
     'drivers' => [
-        'runtime' => new Config\SQLiteDriverConfig(
-            connection: new Config\SQLite\FileConnectionConfig(
-                database: directory('runtime') . '/db.sqlite'
+        'runtime' => new Config\PostgresDriverConfig(
+            connection: new Config\Postgres\TcpConnectionConfig(
+                database: (string)env('DB_NAME', 'cpq_catalog'),
+                host: (string)env('DB_HOST', '127.0.0.1'),
+                port: (int)env('DB_SOURCE_PORT', 5432),
+                user: (string)env('DB_USER', 'root'),
+                password: (string)env('DB_PWD', 'root'),
             ),
             queryCache: true
         ),
