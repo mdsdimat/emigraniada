@@ -1,0 +1,84 @@
+version: '3.5'
+
+services:
+  emg-app:
+    container_name: emg-app
+    build:
+      dockerfile: docker/php/Dockerfile
+      context: ./
+    volumes:
+      - ./:/var/www
+    restart: always
+    depends_on:
+      - emg-db
+    command: "/var/server/rr serve"
+    networks:
+      - emg-net
+
+  emg-db:
+    image: postgres:14.3-alpine3.15
+    container_name: emg-db
+    ports:
+      - ${DB_PORT}:${DB_SOURCE_PORT}
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PWD}
+    networks:
+      - emg-net
+
+  emg-nginx:
+    container_name: emg-nginx
+    ports:
+      - 8080:80
+    depends_on:
+      - emg-app
+    build:
+      context: ./
+      dockerfile: ./docker/nginx/Dockerfile
+    volumes:
+      - ./public:/usr/share/nginx/html
+      - ./docker/nginx/app.conf:/etc/nginx/conf.d/default.conf:ro
+    command: "./wait-for-it.sh php:8080 -- nginx -g 'daemon off;'"
+    networks:
+      - emg-net
+
+#  postgresql:
+#    container_name: temporal-postgresql
+#    image: postgres:13
+#    environment:
+#      POSTGRES_PASSWORD: temporal
+#      POSTGRES_USER: temporal
+#    ports:
+#      - 5432:5432
+#
+#  temporal:
+#    container_name: temporal
+#    image: temporalio/auto-setup:1.14.2
+#    depends_on:
+#      - postgresql
+#    environment:
+#      - DB=postgresql
+#      - DB_PORT=5432
+#      - POSTGRES_USER=temporal
+#      - POSTGRES_PWD=temporal
+#      - POSTGRES_SEEDS=postgresql
+#      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml
+#    ports:
+#      - 7233:7233
+#    volumes:
+#      - ./docker/temporal:/etc/temporal/config/dynamicconfig
+#
+#  temporal-web:
+#    container_name: temporal-web
+#    image: temporalio/web:1.13.0
+#    depends_on:
+#      - temporal
+#    environment:
+#      - TEMPORAL_GRPC_ENDPOINT=temporal:7233
+#      - TEMPORAL_PERMIT_WRITE_API=true
+#    ports:
+#      - 8088:8088
+
+networks:
+  emg-net:
