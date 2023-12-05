@@ -12,8 +12,9 @@ RUN apt-get update && apt-get install -y tesseract-ocr libtesseract-dev
 RUN go mod init file-scanner
 RUN go get -u github.com/nfnt/resize
 RUN go get -u github.com/anthonynsimon/bild
-RUN go get -u github.com/otiai10/gosseract
+RUN go get -u github.com/minio/minio-go/v7
 RUN go get -u github.com/otiai10/gosseract/v2
+
 
 RUN cd cmd && go build -buildvcs=false && cp cmd /usr/local/bin/file-scanner
 

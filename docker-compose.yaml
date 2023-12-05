@@ -6,6 +6,9 @@ services:
             dockerfile: ./.docker/Dockerfile
         volumes:
             - ./file-scanner:/app
+        environment:
+            - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+            - AWS_BUCKET=${AWS_BUCKET}
         networks:
             - emg-net
     minio:

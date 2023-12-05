@@ -1,36 +1,83 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/otiai10/gosseract"
+	"log"
+	"os"
+	"strings"
+
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/otiai10/gosseract/v2"
 )
 
+
 func main() {
-	// Create a new gosseract client
+	endpoint := os.Getenv("MINIO_ENDPOINT")
+	accessKeyID := os.Getenv("AWS_KEY")
+	secretAccessKey := os.Getenv("AWS_SECRET")
+	useSSL := false // Change to true if your MinIO server uses SSL
+
+	minioClient, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Secure: useSSL,
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// MinIO bucket and object parameters
+	bucketName := os.Getenv("AWS_BUCKET")
+	objectName := "photo_2023-12-05_14-51-54.jpg"
+
+	localFilePath := "/tmp/check_image.png"
+
+	err = downloadFile(minioClient, bucketName, objectName, localFilePath)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	scannedText, err := performOCR(localFilePath)
+    if err != nil {
+        log.Fatalln(err)
+    }
+
+    // Print the extracted text in the main function
+    fmt.Println("Scanned text:")
+    fmt.Println(scannedText)
+}
+
+func downloadFile(client *minio.Client, bucket, object, filePath string) error {
+	ctx := context.Background()
+
+	_, err := client.StatObject(ctx, bucket, object, minio.StatObjectOptions{})
+	if err != nil {
+		return fmt.Errorf("File not found on MinIO: %v", err)
+	}
+
+	err = client.FGetObject(ctx, bucket, object, filePath, minio.GetObjectOptions{})
+	if err != nil {
+		return fmt.Errorf("Error downloading file from MinIO: %v", err)
+	}
+
+	fmt.Printf("File downloaded to %s\n", filePath)
+	return nil
+}
+
+func performOCR(imagePath string) (string, error) {
 	client := gosseract.NewClient()
 	defer client.Close()
 
-	// Set the path to the check image
-	imagePath := "images/check.png"
+	client.SetImage(imagePath)
 
-	// Set the language for OCR (e.g., "eng" for English)
 	client.SetLanguage("eng")
 
-	// Open the image file
-	err := client.SetImage(imagePath)
-	if err != nil {
-		fmt.Println("Error setting image:", err)
-		return
-	}
-
-	// Perform OCR on the image
 	text, err := client.Text()
 	if err != nil {
-		fmt.Println("Error extracting text:", err)
-		return
+		return "", fmt.Errorf("Error extracting text: %v", err)
 	}
 
-	// Print the extracted text
-	fmt.Println("Scanned text:")
-	fmt.Println(text)
+	singleLineText := strings.Join(strings.Fields(text), " ")
+	return singleLineText, nil
 }
