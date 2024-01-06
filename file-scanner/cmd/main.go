@@ -10,10 +10,40 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/otiai10/gosseract/v2"
+	"go.temporal.io/sdk/activity"
+    "go.temporal.io/sdk/client"
+    "go.temporal.io/sdk/worker"
 )
 
-
 func main() {
+    if err != nil {
+        log.Fatalln("Unable to create Temporal Client", err)
+    }
+    defer temporalClient.Close()
+
+    temporalClient, err := client.Dial(client.Options{
+        HostPort: os.Getenv("TEMPORAL_ADDRESS"),
+    })
+
+    if err != nil {
+        log.Fatalln("Unable to create client", err)
+    }
+    defer temporalClient.Close()
+
+    w := worker.New(temporalClient, "scanner", worker.Options{})
+
+    w.RegisterActivityWithOptions(
+        fileToText,
+        activity.RegisterOptions{Name: "scanner.FileToText"},
+    )
+
+    err = w.Run(worker.InterruptCh())
+    if err != nil {
+        log.Fatalln("Unable to start worker", err)
+    }
+}
+
+func fileToText(objectName string) (string, error) {
 	endpoint := os.Getenv("MINIO_ENDPOINT")
 	accessKeyID := os.Getenv("AWS_KEY")
 	secretAccessKey := os.Getenv("AWS_SECRET")
@@ -29,7 +59,6 @@ func main() {
 
 	// MinIO bucket and object parameters
 	bucketName := os.Getenv("AWS_BUCKET")
-	objectName := "photo_2023-12-05_14-51-54.jpg"
 
 	localFilePath := "/tmp/check_image.png"
 
@@ -46,6 +75,8 @@ func main() {
     // Print the extracted text in the main function
     fmt.Println("Scanned text:")
     fmt.Println(scannedText)
+
+    return scannedText, nil
 }
 
 func downloadFile(client *minio.Client, bucket, object, filePath string) error {

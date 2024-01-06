@@ -1,16 +1,122 @@
-version: '3'
+version: '3.8'
+
+x-php:
+  &php
+    build:
+        context: ./main-app
+        dockerfile: ./.docker/php/Dockerfile
+        target: app_php
+    environment:
+        DB_HOST: ${DB_HOST:?provide db host to .env}
+        DB_NAME: ${DB_NAME:?provide db name to .env}
+        DB_USER: ${DB_USER:?provide db user to .env}
+        S3_KEY: ${AWS_KEY:?Provide access key to env}
+        S3_SECRET: ${AWS_SECRET:?Provide secret key to env}
+        DB_PASSWORD: ${DB_PWD:?provide db password to .env}
+        TEMPORAL_ADDRESS: ${TEMPORAL_ADDRESS}
+    env_file:
+        - .env
+    depends_on:
+        emg-db:
+            condition: service_healthy
+        minio:
+            condition: service_healthy
+        temporal:
+            condition: service_started
+
 services:
+    main-app:
+        <<: *php
+        command: "/app/rr serve -c .rr.yaml"
+#        command: 'bash -c "while true; do sleep 10000; done"' # can use this to avoid cycle reboot and fix issue in container
+        ports:
+            - "8090:8090"
+        volumes:
+            - ./main-app:/app
+        healthcheck:
+            test: [ 'CMD-SHELL', 'wget --spider -q "http://127.0.0.1:8082/health?plugin=http&plugin=rpc"' ]
+            interval: 2s
+            timeout: 2s
+        networks:
+            - emg-net
+
+    temporal:
+        build:
+            context: ./docker/temporal
+            dockerfile: Dockerfile
+        container_name: temporal
+        healthcheck:
+            test: [ "CMD","tctl","--address", "temporal:7233", "workflow", "list" ]
+            interval: 1s
+            timeout: 5s
+            retries: 30
+        depends_on:
+            - temporal-db
+        environment:
+            DB: ${TEMPORAL_DB_TYPE}
+            DB_PORT: ${TEMPORAL_DB_PORT}
+            POSTGRES_USER: ${TEMPORAL_DB_USER}
+            POSTGRES_PWD: ${TEMPORAL_DB_PWD}
+            POSTGRES_SEEDS: ${TEMPORAL_HOST}
+            DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/development-sql.yaml
+        networks:
+            - emg-net
+
+    temporal-db:
+        image: postgres:14.3-alpine3.15
+        container_name: temporal-db
+        environment:
+            POSTGRES_PASSWORD: ${TEMPORAL_DB_USER}
+            POSTGRES_USER: ${TEMPORAL_DB_PWD}
+        networks:
+            - emg-net
+
+    temporal-web:
+        image: temporalio/web:1.13.0
+        container_name: temporal-web
+        depends_on:
+            temporal:
+                condition: service_healthy
+        environment:
+            TEMPORAL_GRPC_ENDPOINT: ${TEMPORAL_ADDRESS}
+            TEMPORAL_PERMIT_WRITE_API: true
+        ports:
+            - ${TEMPORAL_PORT}:${TEMPORAL_SOURCE_PORT}
+        networks:
+            - emg-net
+
+    emg-db:
+        image: postgres:15.2-alpine3.17
+        ports:
+            - ${DB_PORT}:${DB_SOURCE_PORT}
+        environment:
+            POSTGRES_DB: ${DB_NAME:?provide db name to .env}
+            POSTGRES_USER: ${DB_USER:?provide db user to .env}
+            POSTGRES_PASSWORD: ${DB_PWD:?provide db password to .env}
+        healthcheck:
+            test: pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER
+            interval: 2s
+            timeout: 5s
+            start_period: 2s
+        networks:
+            - emg-net
+
     file-scanner:
         build:
             context: ./file-scanner
             dockerfile: ./.docker/Dockerfile
+        depends_on:
+            temporal:
+                condition: service_healthy
         volumes:
             - ./file-scanner:/app
         environment:
-            - MINIO_ENDPOINT=${MINIO_ENDPOINT}
-            - AWS_BUCKET=${AWS_BUCKET}
+            MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+            AWS_BUCKET: ${AWS_BUCKET}
+            TEMPORAL_ADDRESS: ${TEMPORAL_ADDRESS}
         networks:
             - emg-net
+
     minio:
         image: minio/minio:RELEASE.2022-06-07T00-33-41Z.fips
         command: server --console-address ":9001" /data
