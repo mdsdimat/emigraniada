@@ -1,18 +1,19 @@
 FROM php:8.2-cli-alpine3.17 as app_php
 
-RUN  --mount=type=bind,from=mlocati/php-extension-installer:1.5,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \
-     apk update \
-     && apk add --no-cache  \
-                  bash \
-                  ${PHPIZE_DEPS} \
-              && rm -rf /var/lib/apt/lists/* && \
-      install-php-extensions opcache zip xsl dom exif intl pcntl bcmath sockets pgsql pdo_pgsql && \
-     apk del --no-cache  ${PHPIZE_DEPS} ${BUILD_DEPENDS} && \
-     wget -q "https://github.com/aptible/supercronic/releases/download/v0.2.1/supercronic-linux-arm64" \
-                  -O /usr/bin/supercronic \
-             && chmod +x /usr/bin/supercronic \
-             && mkdir /etc/supercronic \
-             && echo '*/1 * * * * php /app/app.php cron-task foo --times=20' > /etc/supercronic/emg-main
+RUN --mount=type=bind,from=mlocati/php-extension-installer:1.5,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \
+    apk update \
+    && apk add --no-cache \
+        bash \
+        ${PHPIZE_DEPS} \
+        grpc-dev \
+    && rm -rf /var/lib/apt/lists/* && \
+    install-php-extensions opcache zip xsl dom exif intl pcntl bcmath sockets pgsql pdo_pgsql grpc && \
+    apk del --no-cache ${PHPIZE_DEPS} ${BUILD_DEPENDS} && \
+    wget -q "https://github.com/aptible/supercronic/releases/download/v0.2.1/supercronic-linux-arm64" \
+        -O /usr/bin/supercronic \
+    && chmod +x /usr/bin/supercronic \
+    && mkdir /etc/supercronic \
+    && echo '*/1 * * * * php /app/app.php cron-task foo --times=20' > /etc/supercronic/emg-main
 
 WORKDIR /app
 
@@ -43,17 +44,15 @@ RUN set -x \
     && chmod -R 777 ${COMPOSER_HOME}/cache \
     && php app.php configure
 
-
 FROM app_php as app_php_dev
 USER root
-RUN  --mount=type=bind,from=mlocati/php-extension-installer:1.5,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \
-      install-php-extensions xdebug && \
-     apk del --no-cache  ${PHPIZE_DEPS} ${BUILD_DEPENDS}
+RUN --mount=type=bind,from=mlocati/php-extension-installer:1.5,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \
+    install-php-extensions xdebug && \
+    apk del --no-cache ${PHPIZE_DEPS} ${BUILD_DEPENDS}
 
 COPY .docker/php/config/dev.ini /usr/local/etc/php/conf.d/
 
 USER emg-main
-
 
 FROM app_php as app_php_prod
 USER root

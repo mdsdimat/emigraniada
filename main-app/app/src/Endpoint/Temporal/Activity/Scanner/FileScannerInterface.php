@@ -11,5 +11,5 @@ use Temporal\Activity\ActivityMethod;
 interface FileScannerInterface
 {
     #[ActivityMethod]
-    public function FileToText(string $filePath): void; // phpcs:ignore
+    public function FileToText(string $filePath): string; // phpcs:ignore
 }

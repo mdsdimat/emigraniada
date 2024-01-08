@@ -28,7 +28,7 @@ class CheckService
         $this->em->persist($check)->run();
 
         $scanner = $this->workflowClient->newWorkflowStub(
-            FileScannerWorkflow::class,
+            FileScannerWorkflowInterface::class,
             WorkflowOptions::new()->withTaskQueue('scanner')
         );
 
