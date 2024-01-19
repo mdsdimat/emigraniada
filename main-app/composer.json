@@ -13,6 +13,7 @@
         "ext-mbstring": "*",
         "ext-sockets": "*",
         "doctrine/collections": "^1.8",
+        "guzzlehttp/guzzle": "^7.8",
         "league/flysystem-aws-s3-v3": "^2.1",
         "openai-php/client": "^0.8.1",
         "spiral-packages/yii-error-handler-bridge": "^1.1",

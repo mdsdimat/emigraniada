@@ -15,7 +15,7 @@ class User
 {
     /** @psalm-suppress PropertyNotSetInConstructor */
     #[Column(type: 'primary')]
-    private int $id;
+    private ?int $id = null;
 
     public function __construct(
         #[Column(type: 'string')]

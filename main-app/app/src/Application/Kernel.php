@@ -143,6 +143,7 @@ class Kernel extends \Spiral\Framework\Kernel
 
             // Application domain
             Bootloader\AppBootloader::class,
+            Bootloader\SplitwiseBootloader::class,
         ];
     }
 }
