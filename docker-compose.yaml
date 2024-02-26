@@ -5,7 +5,7 @@ x-php:
     build:
         context: ./main-app
         dockerfile: ./.docker/php/Dockerfile
-        target: app_php
+        target: app_php_dev
     environment:
         DB_HOST: ${DB_HOST:?provide db host to .env}
         DB_NAME: ${DB_NAME:?provide db name to .env}

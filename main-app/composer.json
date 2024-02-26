@@ -32,9 +32,11 @@
         "twig/twig": "^3.0"
     },
     "require-dev": {
+        "codeception/codeception": "^5.1",
+        "spiral/dumper": "^3.2.1",
         "spiral/testing": "^2.3",
         "vimeo/psalm": "^5.9",
-        "spiral/dumper": "^3.2.1"
+        "codeception/module-asserts": "*"
     },
     "autoload": {
         "psr-4": {

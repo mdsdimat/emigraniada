@@ -23,16 +23,7 @@ class HomeControllerTest extends TestCase
         $this->http
             ->get('/')
             ->assertOk()
-            ->assertBodyContains('The PHP Framework for future Innovators');
-    }
-
-    public function testDefaultActionWithRuLocale(): void
-    {
-        $this->http
-            ->withHeader('accept-language', 'ru')
-            ->get('/')
-            ->assertOk()
-            ->assertBodyContains('PHP Framework для будущих инноваторов');
+            ->assertBodyContains('HTML Form with File Upload');
     }
 
     public function testInteractWithConsole(): void
