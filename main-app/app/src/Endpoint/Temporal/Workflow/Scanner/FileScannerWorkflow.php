@@ -36,10 +36,8 @@ class FileScannerWorkflow implements FileScannerWorkflowInterface
     {
         $text = yield $this->scannerActivity->FileToText($fileName);
 
-        $scan = yield $this->promptActivity->execute(
+        return yield $this->promptActivity->execute(
             \sprintf('%s this is check`s scan, leave only products and costs', $text)
         );
-
-        \dumprr($scan);
     }
 }

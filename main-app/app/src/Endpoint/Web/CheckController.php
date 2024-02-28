@@ -19,10 +19,10 @@ class CheckController
     ) {
     }
 
-    #[Route(route: '/load-check', name: 'splitwise')]
+    #[Route(route: '/check/load-check', name: 'check')]
     public function loadCheck(LoadCheckRequest $checkRequest): ResponseInterface
     {
-        $this->checkService->createByRequest($checkRequest);
-        return $this->responseWrapper->create(HttpStatus::Ok->value);
+        $parsedCheck = $this->checkService->createByRequest($checkRequest);
+        return $this->responseWrapper->json($parsedCheck, HttpStatus::Ok->value);
     }
 }

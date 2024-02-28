@@ -21,7 +21,7 @@ class CheckService
         private readonly WorkflowClientInterface $workflowClient,
     ) {
     }
-    public function createByRequest(LoadCheckRequest $request): Check
+    public function createByRequest(LoadCheckRequest $request): array
     {
         $check = new Check();
         $check->file = $this->fileService->uploadFile($request->check);
@@ -32,11 +32,10 @@ class CheckService
             WorkflowOptions::new()->withTaskQueue('scanner')
         );
 
-        $this->workflowClient->start(
-            $scanner,
+        $result = $scanner->handle(
             FileService::removeAwsPrefix($check->file->filePath)
         );
 
-        return $check;
+        return $result;
     }
 }

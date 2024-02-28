@@ -30,7 +30,9 @@ class FileServiceTest extends TestCase
         $file = $service->uploadFile($uploadedFile);
 
         $this->assertInstanceOf(File::class, $file);
-//        $this->assertEquals('test.jpg', $file->getFileName());
+
+        $expectedResultPattern = '/^[a-f0-9]{32}\.jpg$/';
+        $this->assertMatchesRegularExpression($expectedResultPattern, $file->getFileName());
     }
 
     public function testUploadExistingFile()
