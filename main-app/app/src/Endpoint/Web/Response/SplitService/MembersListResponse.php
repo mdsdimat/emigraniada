@@ -15,7 +15,6 @@ class MembersListResponse extends ItemsListResponse
     public function __construct(iterable $members)
     {
         foreach ($members as $member) {
-            \dumprr($member->jsonSerialize());
             $this->addItem($member);
         }
     }

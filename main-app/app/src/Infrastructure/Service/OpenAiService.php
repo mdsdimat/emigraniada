@@ -6,6 +6,7 @@ namespace App\Infrastructure\Service;
 
 use App\Application\Config\OpenAIConfig;
 use OpenAI\Client;
+use OpenAI\Contracts\ClientContract;
 
 class OpenAiService
 {
@@ -17,8 +18,13 @@ class OpenAiService
         $this->client = \OpenAI::client($this->config->getKey());
     }
 
-    public function getClient(): Client
+    public function getClient(): ClientContract
     {
         return $this->client;
+    }
+
+    public function getChat(): OpenAiChatWrapper
+    {
+        return new OpenAiChatWrapper($this->client->chat());
     }
 }

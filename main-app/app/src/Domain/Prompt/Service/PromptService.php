@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Domain\Prompt\Service;
 
 use App\Infrastructure\Service\OpenAiService;
-use OpenAI\Responses\Completions\CreateResponseChoice;
 
 class PromptService
 {
@@ -16,8 +15,7 @@ class PromptService
 
     public function executeChatPrompt(string $prompt): array
     {
-        $result = $this->openAiService->getClient()
-            ->chat()
+        $result = $this->openAiService->getChat()
             ->create(
                 [
                     'model' => 'gpt-3.5-turbo',
