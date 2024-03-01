@@ -8,6 +8,7 @@ use App\Application\Enum\HttpStatus;
 use App\Domain\Splitter\Splitwise\Service\SplitwiseService;
 use App\Endpoint\Web\Request\GetSplitMembersRequest;
 use App\Endpoint\Web\Response\SplitService\MembersListResponse;
+use GuzzleHttp\Exception\GuzzleException;
 use Spiral\Http\ResponseWrapper;
 use Psr\Http\Message\ResponseInterface;
 use Spiral\Router\Annotation\Route;
@@ -20,6 +21,10 @@ class SplitServiceController
     ) {
     }
 
+    /**
+     * @throws GuzzleException
+     * @throws \JsonException
+     */
     #[Route(route: '/split/members', name: 'splitwise', methods: ['GET'])]
     public function getMembers(GetSplitMembersRequest $request): ResponseInterface
     {
